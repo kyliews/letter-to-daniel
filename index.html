@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>coisas que eu queria dizer, mas sou embolada para falar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbf6ef;
+    --bg-soft:#f6ece0;
+    --ink:#3a2f33;
+    --ink-soft:#6d5b5e;
+    --muted:#a08e91;
+    --accent:#c25e79;
+    --accent-soft:#e8c4cd;
+    --gold:#c8935f;
+    --serif:'Cormorant Garamond', Georgia, serif;
+    --script:'Great Vibes', cursive;
+    --sans:'Quicksand', system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+
+  html,body{height:100%;}
+
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    background:var(--bg);
+    overflow:hidden;
+    position:fixed;
+    inset:0;
+    width:100%;
+  }
+
+  /* --- ambient background --- */
+  .bg{
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(120% 90% at 15% -10%, #f9e9e1 0%, transparent 55%),
+      radial-gradient(110% 80% at 85% 20%, #f3e5d8 0%, transparent 55%),
+      radial-gradient(130% 120% at 50% 110%, #f0e3de 0%, transparent 60%),
+      var(--bg);
+  }
+  .bg::after{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(90% 70% at 50% 45%, transparent 55%, rgba(120,95,95,.08) 100%);
+  }
+  .spark{ position:absolute; border-radius:50%; background:var(--gold); opacity:0; }
+
+  /* --- viewport + deck --- */
+  .viewport{ position:relative; z-index:1; height:100dvh; overflow:hidden; touch-action:pan-y; }
+  .deck{
+    display:flex; height:100%;
+    transition:transform .62s cubic-bezier(.65,.05,.24,1);
+    will-change:transform;
+  }
+  .slide{
+    flex:0 0 100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    padding:calc(18px + env(safe-area-inset-top)) 22px calc(96px + env(safe-area-inset-bottom));
+    position:relative; overflow:hidden;
+  }
+  .inner{
+    max-width:42rem; width:100%; text-align:center;
+    position:relative; z-index:2;
+  }
+  .fade{ opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s ease; }
+  .slide.active .fade{ opacity:1; transform:none; }
+
+  p.body{
+    font-size:clamp(1.5rem, 5.4vw, 2.25rem);
+    line-height:1.38; font-weight:500;
+    text-wrap:pretty; letter-spacing:.1px;
+    color:var(--ink);
+  }
+  p.body .soft{ color:var(--ink-soft); }
+  p.body em{ font-style:italic; color:var(--accent); }
+  .tag{
+    display:inline-block; margin-top:26px;
+    font-family:var(--sans); font-size:.72rem; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* --- cover --- */
+  .cover-title{
+    font-family:var(--script); font-weight:400;
+    font-size:clamp(2.5rem, 9.5vw, 4.6rem); line-height:1.08;
+    color:var(--ink);
+    text-shadow:0 2px 18px rgba(194,94,121,.16);
+  }
+  .cover-sub{
+    margin-top:20px; font-family:var(--sans); font-size:.74rem; letter-spacing:.32em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .lotus{ filter:drop-shadow(0 6px 16px rgba(194,94,121,.22)); }
+
+  /* --- buttons --- */
+  button{ font-family:var(--sans); cursor:pointer; }
+
+  .navbtn{
+    position:fixed; bottom:calc(18px + env(safe-area-inset-bottom)); z-index:30;
+    width:52px; height:52px; border-radius:50%;
+    border:1px solid rgba(58,47,51,.16);
+    background:rgba(255,255,255,.72); color:var(--ink);
+    font-size:1.5rem; line-height:1;
+    backdrop-filter:blur(8px);
+    box-shadow:0 6px 18px rgba(90,60,60,.12);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .2s ease, opacity .3s ease, background .2s ease;
+  }
+  .navbtn:active{ transform:scale(.9); }
+  .navbtn:disabled{ opacity:.2; pointer-events:none; }
+  #prev{ left:16px; }
+  #next{ right:16px; }
+
+  .progress{
+    position:fixed; left:0; top:0; height:3px; width:0; z-index:31;
+    background:linear-gradient(90deg, var(--gold), var(--accent));
+    transition:width .5s ease;
+  }
+  .counter{
+    position:fixed; top:calc(10px + env(safe-area-inset-top)); right:16px; z-index:31;
+    font-family:var(--sans); font-size:.7rem; letter-spacing:.2em; color:var(--muted);
+  }
+
+  .pill{
+    display:inline-flex; align-items:center; gap:9px;
+    margin-top:28px; padding:13px 24px; border-radius:999px;
+    border:1px solid rgba(194,94,121,.42);
+    background:rgba(194,94,121,.10); color:var(--accent);
+    font-size:.8rem; letter-spacing:.18em;
+    box-shadow:0 6px 18px rgba(194,94,121,.14);
+    transition:background .25s ease, transform .15s ease;
+  }
+  .pill:active{ transform:scale(.95); background:rgba(194,94,121,.2); }
+
+  /* --- easter egg trigger --- */
+  .eegg{
+    position:absolute; top:16px; left:16px; z-index:6;
+    display:flex; align-items:center; gap:7px;
+    padding:7px 12px; border-radius:999px;
+    background:rgba(255,255,255,.66); border:1px solid rgba(200,147,95,.42);
+    color:#8a5a2e; font-family:var(--sans); font-size:.7rem; letter-spacing:.12em;
+    opacity:.6; transition:opacity .3s ease;
+  }
+  .eegg:hover, .eegg:active{ opacity:1; }
+
+  /* --- organized animals --- */
+  #scatter{
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+  }
+  .row{
+    position:absolute; left:0; right:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-wrap:wrap; gap:18px; pointer-events:none;
+  }
+  .row.sea{ top:4%; }
+  .row.dogs{ bottom:11%; }
+  .row .zoomable{ pointer-events:auto; }
+  .zoomable{
+    background:transparent; border:none; padding:0; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    filter:drop-shadow(0 3px 6px rgba(90,60,60,.22));
+    transition:transform .18s ease, filter .18s ease;
+  }
+  .zoomable:active{ transform:scale(.85); }
+  .animal-emoji{ font-size:42px; }
+  .zoomable svg{ width:50px; height:50px; }
+
+  /* small-things decorations (under the text) */
+  .smalls-row{
+    display:flex; align-items:center; justify-content:center;
+    gap:16px; margin-top:18px; flex-wrap:wrap;
+  }
+  .tiny{
+    display:inline-block; font-size:22px; opacity:.6; line-height:1;
+    animation:drift 7s ease-in-out infinite;
+  }
+
+  /* mushroom */
+  .shroom{
+    position:absolute; z-index:2; font-size:20px; opacity:.6;
+    animation:shroombob 4.5s ease-in-out infinite;
+  }
+
+  /* --- modals --- */
+  .overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(58,47,51,.34); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity .35s ease;
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .modal{
+    width:100%; max-width:34rem; max-height:86dvh; overflow:auto;
+    background:linear-gradient(160deg, #fffdf9, #f8efe6);
+    border:1px solid rgba(58,47,51,.10); border-radius:22px;
+    padding:30px 28px; position:relative;
+    transform:translateY(20px) scale(.97); transition:transform .35s ease;
+    box-shadow:0 28px 80px rgba(90,60,60,.20);
+  }
+  .overlay.show .modal{ transform:none; }
+  .close{
+    position:absolute; top:12px; right:14px;
+    width:38px; height:38px; border-radius:50%; border:1px solid rgba(58,47,51,.16);
+    background:transparent; color:var(--ink); font-size:1.2rem;
+  }
+  .modal h3{
+    font-family:var(--script); font-weight:400; font-size:2rem; color:var(--accent);
+    margin-bottom:4px;
+  }
+  .modal .sub{ font-family:var(--sans); font-size:.68rem; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); margin-bottom:20px; }
+  .modal h4{ font-family:var(--sans); font-size:.72rem; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin:22px 0 10px; }
+  .modal .lyric{ font-size:1.08rem; line-height:1.55; color:var(--ink); }
+  .modal p.para{ font-size:1rem; line-height:1.6; color:var(--ink-soft); margin-bottom:14px; }
+
+  /* --- zoom lightbox --- */
+  .zoom-body{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .zoom-body .animal-emoji{ font-size:min(60vmin,300px); }
+  .zoom-body svg{ width:min(60vmin,320px); height:auto; }
+  .zoom-cap{ font-family:var(--sans); font-size:.74rem; letter-spacing:.2em; color:var(--accent); text-transform:lowercase; }
+
+  /* --- animations --- */
+  @keyframes drift{ 0%,100%{ transform:translateY(0) rotate(0);} 50%{ transform:translateY(-12px) rotate(8deg);} }
+  @keyframes shroombob{ 0%,100%{ transform:translateY(0) rotate(-4deg);} 50%{ transform:translateY(-7px) rotate(5deg);} }
+  @keyframes floatpetal{
+    0%{ transform:translateY(105vh) translateX(0) rotate(0); opacity:0;}
+    10%{ opacity:.75; }
+    90%{ opacity:.5; }
+    100%{ transform:translateY(-8vh) translateX(30px) rotate(300deg); opacity:0;}
+  }
+  .petal{
+    position:fixed; top:-40px; z-index:0; font-size:20px; color:var(--accent);
+    animation:floatpetal 14s linear infinite; pointer-events:none;
+  }
+
+  @media(prefers-reduced-motion: reduce){
+    .deck{ transition:none; }
+    .spark,.petal,.tiny,.shroom,.fade{ animation:none !important; transition:none !important; }
+    .fade{ opacity:1; transform:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- lotus definition (shared) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lp1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".5" stop-color="#fdf4f6"/>
+      <stop offset="1" stop-color="#f4d6de"/>
+    </linearGradient>
+    <linearGradient id="lp2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f7e6eb"/>
+    </linearGradient>
+  </defs>
+  <symbol id="lotus" viewBox="0 0 160 128">
+    <path d="M80 120 C48 112 28 90 32 58 C44 76 62 88 80 90 Z" fill="url(#lp1)" opacity=".85"/>
+    <path d="M80 120 C112 112 132 90 128 58 C116 76 98 88 80 90 Z" fill="url(#lp1)" opacity=".85"/>
+    <path d="M80 118 C54 108 38 88 42 54 C54 72 68 82 80 86 Z" fill="url(#lp1)"/>
+    <path d="M80 118 C106 108 122 88 118 54 C106 72 92 82 80 86 Z" fill="url(#lp1)"/>
+    <path d="M80 114 C62 102 50 82 52 50 C64 68 72 78 80 80 Z" fill="url(#lp2)"/>
+    <path d="M80 114 C98 102 110 82 108 50 C96 68 88 78 80 80 Z" fill="url(#lp2)"/>
+    <path d="M80 110 C68 100 60 80 62 48 C72 66 76 74 80 76 Z" fill="#ffffff"/>
+    <path d="M80 110 C92 100 100 80 98 48 C88 66 84 74 80 76 Z" fill="#ffffff"/>
+    <path d="M80 112 C71 98 71 66 80 44 C89 66 89 98 80 112 Z" fill="#ffffff"/>
+    <path d="M80 108 C76 92 76 68 80 50" stroke="#f2d0db" stroke-width="1.1" fill="none"/>
+    <path d="M80 108 C73 88 66 72 62 58" stroke="#f6dde5" stroke-width="1" fill="none"/>
+    <path d="M80 108 C87 88 94 72 98 58" stroke="#f6dde5" stroke-width="1" fill="none"/>
+    <ellipse cx="80" cy="86" rx="10" ry="7" fill="#e9b45f"/>
+    <g fill="#c8935f">
+      <circle cx="75" cy="85" r="1.6"/><circle cx="80" cy="82.5" r="2.4"/><circle cx="85" cy="85" r="1.6"/>
+      <circle cx="71.5" cy="86.5" r="1.2"/><circle cx="88.5" cy="86.5" r="1.2"/><circle cx="80" cy="88" r="1.3"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="bg" id="bg"></div>
+<div class="progress" id="progress"></div>
+<div class="counter" id="counter"></div>
+
+<div class="viewport" id="viewport">
+  <div class="deck" id="deck">
+
+    <!-- 0 · cover (title only) -->
+    <section class="slide">
+      <div class="inner">
+        <svg class="lotus" width="92" height="74" viewBox="0 0 160 128" aria-hidden="true" style="margin-bottom:26px"><use href="#lotus"/></svg>
+        <h1 class="cover-title fade">coisas que eu queria dizer, mas sou embolada para falar</h1>
+        <div class="cover-sub fade" style="transition-delay:.18s">uma carta em páginas · toque nas setas</div>
+      </div>
+    </section>
+
+    <!-- 1 · first paragraph -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">em relação a situação financeira, eu tava pensando sobre o que falar sobre isso, mas vou tentar ser bem direta.</p>
+        <span class="tag fade" style="transition-delay:.2s"> </span>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">já recusei caras com boa condição financeira, carro, etc, um conforto bem amais do que eu tenho.</p>
+      </div>
+      <span class="shroom" style="top:18%; right:12%">🍄</span>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">passando um pouco pelos motivos, eu penso que essas pessoas esperam num relacionamento <em>alguém que eu não gostaria de ser</em>, ou achavam que só o dinheiro era o bastante e nenhum esforço por mim deveria ser feito.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">como eu me amo demais pra estar em algo assim, <em>preferi me guardar</em>.</p>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">então eu encontro alguém que é provedor mesmo no pouco, sabe conversar, dizer o que sente e tentar resolver, que me faz sorrir mesmo nos dias mais pesados, que é atencioso, gentil,</p>
+      </div>
+      <span class="shroom" style="bottom:24%; left:10%">🍄</span>
+    </section>
+
+    <!-- 6 · rihanna -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">que faz eu me sentir como a rihanna em <em>“only girl in the world”</em>.</p>
+        <button class="pill fade" style="transition-delay:.18s" id="rihannaBtn">♪&nbsp; (toque aqui)</button>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">que abre a porta do carro pra mim, que amarra meu cadarço, que não deixa eu andar com bolsa e sacola pesada, que repara na cor da minha unha, que diz que eu sou linda mesmo acordando com os cílios todos bagunçados, o rosto inchado e uma touca de cetim…</p>
+      </div>
+    </section>
+
+    <!-- 8 · pequenas coisas (animals) -->
+    <section class="slide" id="animaisSlide">
+      <div class="inner">
+        <p class="body fade">alguém que repara nas pequenas coisas que eu falo, que realmente <em>FAZ</em>, em vez de prometer</p>
+        <p class="body fade soft" style="font-size:clamp(1.15rem,4vw,1.6rem); margin-top:14px">(sim, o valor das pequenas coisas! a garrafa de água que tá cheia, a janela aberta, a preocupação em ter um chinelinho pra eu usar, ir lá e usar veneno de muriçoca não porque eu pedi, mas porque você sabia)</p>
+        <div class="smalls-row" id="smallsRow"></div>
+      </div>
+      <div id="scatter"></div>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">atitude, cuidado e presença pesam <em>muito mais</em> para mim.</p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">ah… se tem tantas qualidades que eu valorizo, quem se importa se vai esquecer uma data ou outra? eu sou boa com números, e lembro até de quantas formigas eu vi passar pelo balcão da cozinha, mas mesmo sabendo de tudo isso esqueci da sua alergia <em>(foi só uma vez, juro… KKKKKKKKK)</em></p>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">quero dizer que ninguém é perfeito. que você pode e deve sim melhorar 😄👍</p>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">mas que também nunca reclamei por pagar uma conta, ou o uber pra ir te ver porque você tá passando por um aperto e sem ter a moto funcionando.</p>
+      </div>
+      <span class="shroom" style="top:22%; left:14%">🍄</span>
+    </section>
+
+    <!-- 13 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">me importo com conforto sim, não posso fingir que não, mas sei que certas coisas vem com o tempo, até porque com uma mulher como eu do lado, as coisas só tendem a melhorar 😜</p>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">sabendo disso, continua sendo o homem que eu precisava na minha vida, e não fica com medo sobre dinheiro. eu já podia me dar o conforto que eu merecia, por isso não tava buscando alguém que já viesse pronto. sim, o passado pode ter sido complicado, mas vejo um <em>futuro brilhante</em> na minha frente.</p>
+      </div>
+    </section>
+
+    <!-- 15 · serendipidade (easter egg) -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">a <em>Serendipidade</em> fala sobre a capacidade de fazer descobertas valiosas ou agradáveis por acaso, enquanto não se procura.</p>
+        <p class="body fade soft" style="font-size:clamp(1.15rem,4vw,1.6rem); margin-top:16px">acaso feliz: um evento inesperado traz um resultado positivo.</p>
+      </div>
+      <button class="eegg fade" id="easterEgg" style="transition-delay:.3s">🎧 o que o gorillaz tem haver com isso?</button>
+      <span class="shroom" style="bottom:26%; right:13%">🍄</span>
+    </section>
+
+    <!-- 16 -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">eu não tava procurando exatamente por alguém como você, mas encontrei, quer dizer, dei uma chance kkk... e olhando pra tudo o que eu valorizo e esperava, percebo que já tem muitas coisas aqui que eu nem sabia que precisava. eu espero que esse texto te faça compreender porque eu não quero que você viva na defensiva, pensando em um futuro que eu hipoteticamente diria que não é o suficiente.pra mim, você já vale a pena, e que como qualquer pessoas, ainda pode crescer e fazer mais por mim.</p> 
+      </div>
+    </section>
+
+    <!-- 17 · final -->
+    <section class="slide">
+      <div class="inner">
+        <p class="body fade">sim meu bem, eu sou <em>hai téch téquinology</em>. 👩🏼‍💻</p>
+        <p class="body fade soft" style="font-size:clamp(1.2rem,4.4vw,1.7rem); margin-top:14px">da sua little sex machine</p>
+        <svg class="lotus fade" style="transition-delay:.3s; margin:40px auto 0; display:block" width="150" height="120" viewBox="0 0 160 128" aria-hidden="true"><use href="#lotus"/></svg>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<button class="navbtn" id="prev" aria-label="voltar">‹</button>
+<button class="navbtn" id="next" aria-label="avançar">›</button>
+
+<!-- zoom lightbox -->
+<div class="overlay" id="zoomOverlay">
+  <div class="modal" style="max-width:26rem; text-align:center">
+    <button class="close" id="zoomClose">×</button>
+    <div class="zoom-body" id="zoomBody"></div>
+    <div class="zoom-cap" id="zoomCap"></div>
+  </div>
+</div>
+
+<!-- rihanna modal -->
+<div class="overlay" id="rihannaOverlay">
+  <div class="modal">
+    <button class="close" data-close>×</button>
+    <h3>only girl (in the world)</h3>
+    <div class="sub">rihanna</div>
+    <h4>refrão principal</h4>
+    <p class="lyric">
+      i want you to love me<br>
+      like i'm a hot peach<br>
+      make you love me<br>
+      so we can be happy<br><br>
+      i don't care what people say<br>
+      they don't understand<br>
+      you're the only boy<br>
+      for me, you're the only man<br><br>
+      i want you to make me feel<br>
+      like i'm the only girl in the world<br>
+      like i'm the only one<br>
+      that you'll ever love<br>
+      like i'm the only girl in the world
+    </p>
+  </div>
+</div>
+
+<!-- gorillaz easter egg modal -->
+<div class="overlay" id="gorillazOverlay">
+  <div class="modal" style="max-width:38rem">
+    <button class="close" data-close>×</button>
+    <h3>on melancholy hill</h3>
+    <div class="sub">gorillaz · plastic beach (2010) · você achou o easter egg 🎧</div>
+
+    <p class="para">uma das faixas mais bonitas do álbum plastic beach (2010). sobe devagar, com vista, e de repente você tá num lugar onde tudo dói um pouco menos. dá vontade de chorar bonito.</p>
+
+    <h4>tradução (pt-br)</h4>
+    <p class="lyric">
+      suba, suba comigo<br>
+      na colina da melancolia<br>
+      (melancolia, melancolia)<br><br>
+      traz o freio, jogue fora<br>
+      você não vai sentir tristeza nenhuma<br>
+      nesta colina<br>
+      tempo para dizer o que quiser<br>
+      e você não vai sentir tristeza nenhuma<br><br>
+      é aqui que vamos ficar<br>
+      e dói<br><br>
+      é claro, é assim<br>
+      que eu sempre quis<br>
+      e dói<br><br>
+      a neve flutua sobre você<br>
+      como uma promessa<br>
+      quebrada no fundo de um copo<br>
+      e eu sei que virá<br>
+      sim, eu sei que virá<br><br>
+      nos vemos em algum lugar<br>
+      que possamos rir<br>
+      e dói
+    </p>
+
+    <h4>história / significado</h4>
+    <p class="para">escrita por damon albarn com os vocais delicados de bobby womack, a música fala sobre escapar pra um lugar seguro com alguém que a gente ama — uma colina fictícia onde a dor do mundo não chega. é sobre encontrar refúgio numa pessoa. plastic beach é o álbum que nasceu de uma fase difícil do damon, e melancholy hill virou o respiro dentro dele. quem ouve sente exatamente o que eu sinto escrevendo: dá vontade de subir essa colina com quem a gente ama e esquecer o resto... ( que nem quando faltou energia e tu me levou naquele lugar super bonito)</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const deck = document.getElementById('deck');
+  const slides = [...document.querySelectorAll('.slide')];
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const viewport = document.getElementById('viewport');
+  let cur = 0;
+  const N = slides.length;
+
+  function update(){
+    deck.style.transform = 'translateX(' + (-cur*100) + '%)';
+    slides.forEach((s,i)=>s.classList.toggle('active', i===cur));
+    counter.textContent = (cur+1) + ' / ' + N;
+    prev.disabled = (cur===0);
+    next.disabled = (cur===N-1);
+    progress.style.width = ((cur+1)/N*100) + '%';
+  }
+  function go(i){ cur = Math.max(0, Math.min(N-1, i)); update(); }
+  prev.addEventListener('click', ()=>go(cur-1));
+  next.addEventListener('click', ()=>go(cur+1));
+
+  window.addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight') go(cur+1);
+    if(e.key==='ArrowLeft') go(cur-1);
+  });
+
+  let sx=0, sy=0, tracking=false;
+  viewport.addEventListener('touchstart', e=>{
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; tracking=true;
+  }, {passive:true});
+  viewport.addEventListener('touchend', e=>{
+    if(!tracking) return; tracking=false;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if(Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)){
+      go(dx < 0 ? cur+1 : cur-1);
+    }
+  }, {passive:true});
+
+  update();
+
+  // --- ambient sparks ---
+  const bg = document.getElementById('bg');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduceMotion){
+    for(let i=0;i<26;i++){
+      const s=document.createElement('span');
+      s.className='spark';
+      const size=(Math.random()*3+1).toFixed(1);
+      s.style.width=size+'px'; s.style.height=size+'px';
+      s.style.left=(Math.random()*100)+'%';
+      s.style.top=(Math.random()*100)+'%';
+      s.style.animation='drift '+(5+Math.random()*7).toFixed(1)+'s ease-in-out '+ (Math.random()*4).toFixed(1)+'s infinite';
+      s.style.opacity=(0.18+Math.random()*0.4).toFixed(2);
+      bg.appendChild(s);
+    }
+    const petalChars=['🌸','🌷','💮','🪷'];
+    for(let i=0;i<7;i++){
+      const p=document.createElement('span');
+      p.className='petal';
+      p.textContent=petalChars[i%petalChars.length];
+      p.style.left=(Math.random()*96)+'%';
+      p.style.animationDuration=(11+Math.random()*8).toFixed(1)+'s';
+      p.style.animationDelay=(Math.random()*12).toFixed(1)+'s';
+      p.style.fontSize=(14+Math.random()*12).toFixed(0)+'px';
+      document.body.appendChild(p);
+    }
+  }
+
+  // --- organized animals on slide 8 ---
+  const scatter = document.getElementById('scatter');
+  const smallsRow = document.getElementById('smallsRow');
+
+  const seaItems = [
+    {kind:'emoji', char:'🐋', label:'baleia azul'},
+    {kind:'emoji', char:'🦈', label:'tubarão'},
+    {kind:'emoji', char:'🦈', label:'tubarão'},
+    {kind:'emoji', char:'🦈', label:'tubarão'}
+  ];
+  const dogItems = [
+    {kind:'svg', svg:dogA(), label:'vira-lata preto de pelo curto'},
+    {kind:'svg', svg:dogB(), label:'vira-lata marrom de pelo longo'},
+    {kind:'svg', svg:dogC(), label:'vira-lata preto e branco de pelo curto'}
+  ];
+
+  function makeZoomable(item){
+    const btn=document.createElement('button');
+    btn.className='zoomable';
+    btn.setAttribute('data-label', item.label);
+    if(item.kind==='emoji'){ btn.innerHTML='<span class="animal-emoji">'+item.char+'</span>'; }
+    else { btn.innerHTML=item.svg; }
+    return btn;
+  }
+
+  const seaRow=document.createElement('div'); seaRow.className='row sea';
+  seaItems.forEach(it=>seaRow.appendChild(makeZoomable(it)));
+  scatter.appendChild(seaRow);
+
+  const dogsRow=document.createElement('div'); dogsRow.className='row dogs';
+  dogItems.forEach(it=>dogsRow.appendChild(makeZoomable(it)));
+  scatter.appendChild(dogsRow);
+
+  const smalls=['💧','🪟','🩴','🦟'];
+  smalls.forEach((c,i)=>{
+    const t=document.createElement('span');
+    t.className='tiny';
+    t.textContent=c;
+    t.style.animationDelay=(i*0.6)+'s';
+    smallsRow.appendChild(t);
+  });
+
+  function dogA(){
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 23 L16 10 L28 19 Z" fill="#2e2b33"/><path d="M44 23 L48 10 L36 19 Z" fill="#2e2b33"/><circle cx="32" cy="26" r="12" fill="#2e2b33"/><circle cx="27" cy="25" r="1.7" fill="#fbf6ef"/><circle cx="37" cy="25" r="1.7" fill="#fbf6ef"/><ellipse cx="32" cy="31" rx="2.6" ry="1.9" fill="#111"/><path d="M30 34 Q32 39 35 34 Q33 37 30 34 Z" fill="#e87f8f"/><path d="M20 40 Q32 52 44 40 L44 53 Q32 59 20 53 Z" fill="#2e2b33"/></svg>';
+  }
+  function dogB(){
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 22 Q11 31 20 35 Q22 27 26 25 Z" fill="#5a3520"/><path d="M46 22 Q53 31 44 35 Q42 27 38 25 Z" fill="#5a3520"/><circle cx="32" cy="15" r="5" fill="#6d4428"/><circle cx="25" cy="18" r="4" fill="#6d4428"/><circle cx="39" cy="18" r="4" fill="#6d4428"/><circle cx="32" cy="26" r="12" fill="#6d4428"/><circle cx="27" cy="25" r="1.7" fill="#fbf6ef"/><circle cx="37" cy="25" r="1.7" fill="#fbf6ef"/><ellipse cx="32" cy="31" rx="2.6" ry="1.9" fill="#2b1a0c"/><path d="M30 34 Q32 39 35 34 Q33 37 30 34 Z" fill="#e87f8f"/><path d="M20 40 Q32 52 44 40 L44 53 Q32 59 20 53 Z" fill="#6d4428"/></svg>';
+  }
+  function dogC(){
+    return '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 23 L16 10 L28 19 Z" fill="#2e2b33"/><path d="M44 23 L48 10 L36 19 Z" fill="#2e2b33"/><circle cx="32" cy="26" r="12" fill="#2e2b33"/><path d="M32 16 Q29 23 29 32 L35 32 Q35 23 32 16 Z" fill="#f7f1ea"/><ellipse cx="32" cy="31" rx="5" ry="3.4" fill="#f7f1ea"/><circle cx="27" cy="25" r="1.7" fill="#fbf6ef"/><circle cx="37" cy="25" r="1.7" fill="#fbf6ef"/><ellipse cx="32" cy="30" rx="2.6" ry="1.9" fill="#111"/><path d="M30 33 Q32 38 35 33 Q33 36 30 33 Z" fill="#e87f8f"/><path d="M20 40 Q32 52 44 40 L44 53 Q32 59 20 53 Z" fill="#2e2b33"/><path d="M28 43 Q32 49 36 43 Q32 53 28 43 Z" fill="#f7f1ea"/></svg>';
+  }
+
+  // --- zoom lightbox ---
+  const zoomOverlay=document.getElementById('zoomOverlay');
+  const zoomBody=document.getElementById('zoomBody');
+  const zoomCap=document.getElementById('zoomCap');
+  document.addEventListener('click', e=>{
+    const z=e.target.closest('.zoomable');
+    if(z){ openZoom(z); }
+  });
+  function openZoom(el){
+    zoomBody.innerHTML = el.innerHTML;
+    zoomCap.textContent = el.getAttribute('data-label') || '';
+    zoomOverlay.classList.add('show');
+  }
+  document.getElementById('zoomClose').addEventListener('click', ()=>zoomOverlay.classList.remove('show'));
+  zoomOverlay.addEventListener('click', e=>{ if(e.target===zoomOverlay) zoomOverlay.classList.remove('show'); });
+
+  // --- rihanna modal ---
+  const rihannaOverlay=document.getElementById('rihannaOverlay');
+  document.getElementById('rihannaBtn').addEventListener('click', ()=>rihannaOverlay.classList.add('show'));
+
+  // --- gorillaz modal ---
+  const gorillazOverlay=document.getElementById('gorillazOverlay');
+  document.getElementById('easterEgg').addEventListener('click', ()=>gorillazOverlay.classList.add('show'));
+
+  // --- generic modal close ---
+  document.querySelectorAll('[data-close]').forEach(b=>{
+    b.addEventListener('click', ()=>b.closest('.overlay').classList.remove('show'));
+  });
+  document.querySelectorAll('.overlay').forEach(o=>{
+    o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('show'); });
+  });
+})();
+</script>
+</body>
+</html>
